@@ -16,41 +16,45 @@
     .container {
       position: relative;
       width: 1000px;
-      height: 200px;
+      height: 300px;
+      max-width: 100%;
+      overflow: hidden;
     }
     .draggable {
       width: 100px;
       height: 100px;
       cursor: grab;
       position: absolute;
+      touch-action: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 0px; top: 50px;">
-    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 120px; top: 50px;">
-    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 240px; top: 50px;">
-    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 360px; top: 50px;">
-    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 480px; top: 50px;">
-    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 600px; top: 50px;">
-    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 720px; top: 50px;">
-    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 840px; top: 50px;">
+    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 0px; top: 100px;">
+    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 120px; top: 100px;">
+    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 240px; top: 100px;">
+    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 360px; top: 100px;">
+    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 480px; top: 100px;">
+    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 600px; top: 100px;">
+    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 720px; top: 100px;">
+    <img src="istockphoto-1227596495-612x612-removebg-preview.png" class="draggable" style="left: 840px; top: 100px;">
   </div>
 
   <script>
     const draggables = document.querySelectorAll('.draggable');
 
-    draggables.forEach(el => {
-      el.addEventListener('mousedown', startDrag);
-    });
-
     let activeEl = null;
     let offsetX = 0;
     let offsetY = 0;
 
+    draggables.forEach(el => {
+      el.addEventListener('mousedown', startDrag);
+      el.addEventListener('touchstart', startTouchDrag, { passive: false });
+    });
+
     function startDrag(e) {
-      if (e.button !== 0) return; // left mouse button only
+      if (e.button !== 0) return;
       activeEl = e.target;
       const rect = activeEl.getBoundingClientRect();
       offsetX = e.clientX - rect.left;
@@ -61,6 +65,18 @@
       e.preventDefault();
     }
 
+    function startTouchDrag(e) {
+      activeEl = e.target;
+      const touch = e.touches[0];
+      const rect = activeEl.getBoundingClientRect();
+      offsetX = touch.clientX - rect.left;
+      offsetY = touch.clientY - rect.top;
+
+      document.addEventListener('touchmove', onTouchDrag, { passive: false });
+      window.addEventListener('touchend', endDrag);
+      e.preventDefault();
+    }
+
     function onDrag(e) {
       if (!activeEl) return;
       const containerRect = document.querySelector('.container').getBoundingClientRect();
@@ -68,9 +84,20 @@
       activeEl.style.top = (e.clientY - containerRect.top - offsetY) + 'px';
     }
 
+    function onTouchDrag(e) {
+      if (!activeEl) return;
+      const touch = e.touches[0];
+      const containerRect = document.querySelector('.container').getBoundingClientRect();
+      activeEl.style.left = (touch.clientX - containerRect.left - offsetX) + 'px';
+      activeEl.style.top = (touch.clientY - containerRect.top - offsetY) + 'px';
+      e.preventDefault();
+    }
+
     function endDrag() {
       document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('touchmove', onTouchDrag);
       window.removeEventListener('mouseup', endDrag);
+      window.removeEventListener('touchend', endDrag);
       activeEl = null;
     }
   </script>
